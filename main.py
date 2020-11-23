@@ -10,9 +10,7 @@ python -m arcade.examples.starting_template
 import arcade
 import player
 
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 768
-SCREEN_TITLE = "Flappy clone"
+import game_constants
 
 
 class MyGame(arcade.Window):
@@ -31,6 +29,12 @@ class MyGame(arcade.Window):
 
         self.player = None
         self.entity_list = None
+
+        # To track player key pressed
+        self.left_pressed = False
+        self.right_pressed = False
+        self.up_pressed = False
+        self.down_pressed = False
 
     def setup(self):
         """ Set up the game variables. Call to re-start the game. """
@@ -57,6 +61,17 @@ class MyGame(arcade.Window):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        self.player.change_x, self.player.change_y = 0, 0
+
+        if self.up_pressed and not self.down_pressed:
+            self.player.change_y = -game_constants.MOVEMENT_SPEED
+        elif self.down_pressed and not self.up_pressed:
+            self.player.change_y = game_constants.MOVEMENT_SPEED
+        if self.left_pressed and not self.right_pressed:
+            self.player.change_x = -game_constants.MOVEMENT_SPEED
+        elif self.right_pressed and not self.left_pressed:
+            self.player.change_x = game_constants.MOVEMENT_SPEED
+
         self.entity_list.update()
         self.entity_list.update_animation()
 
@@ -67,13 +82,27 @@ class MyGame(arcade.Window):
         For a full list of keys, see:
         http://arcade.academy/arcade.key.html
         """
-        pass
+        if key == arcade.key.LEFT:
+            self.left_pressed = True
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = True
+        elif key == arcade.key.UP:
+            self.up_pressed = True
+        elif key == arcade.key.DOWN:
+            self.down_pressed = True
 
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
         """
-        pass
+        if key == arcade.key.LEFT:
+            self.left_pressed = False
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = False
+        elif key == arcade.key.UP:
+            self.up_pressed = False
+        elif key == arcade.key.DOWN:
+            self.down_pressed = False
 
     def on_mouse_motion(self, x, y, delta_x, delta_y):
         """
@@ -96,7 +125,7 @@ class MyGame(arcade.Window):
 
 def main():
     """ Main method """
-    game = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game = MyGame(game_constants.SCREEN_WIDTH, game_constants.SCREEN_HEIGHT, game_constants.SCREEN_TITLE)
     game.setup()
     arcade.run()
 
