@@ -9,6 +9,8 @@ python -m arcade.examples.starting_template
 """
 import arcade
 import player
+from obstacle import Obstacle
+from random import randint
 
 import game_constants
 
@@ -29,6 +31,8 @@ class MyGame(arcade.Window):
 
         self.player = None
         self.entity_list = None
+        self.background = None
+        self.obstacle_list = None
 
         # To track player key pressed
         self.left_pressed = False
@@ -38,9 +42,19 @@ class MyGame(arcade.Window):
 
     def setup(self):
         """ Set up the game variables. Call to re-start the game. """
-        # Create your sprites and sprite lists here
+
+        # Setup the background
+        self.background = arcade.Sprite("assets/images/background.png", 1.75)
+        self.background.center_x = game_constants.SCREEN_WIDTH / 2
+        self.background.center_y = game_constants.SCREEN_HEIGHT / 2
+
+        # Setup an arcade timer
+        arcade.schedule(self.spawn_obstacle, 1.5)
+
         self.player = player.Player()
+
         self.entity_list = arcade.SpriteList()
+        self.obstacle_list = arcade.SpriteList()
         self.entity_list.append(self.player)
 
     def on_draw(self):
@@ -51,7 +65,10 @@ class MyGame(arcade.Window):
         # This command should happen before we start drawing. It will clear
         # the screen to the background color, and erase what we drew last frame.
         arcade.start_render()
+
+        self.background.draw()
         self.entity_list.draw()
+        self.obstacle_list.draw()
 
         # Call draw() on all your sprite lists below
 
@@ -64,9 +81,9 @@ class MyGame(arcade.Window):
         self.player.change_x, self.player.change_y = 0, 0
 
         if self.up_pressed and not self.down_pressed:
-            self.player.change_y = -game_constants.MOVEMENT_SPEED
-        elif self.down_pressed and not self.up_pressed:
             self.player.change_y = game_constants.MOVEMENT_SPEED
+        elif self.down_pressed and not self.up_pressed:
+            self.player.change_y = -game_constants.MOVEMENT_SPEED
         if self.left_pressed and not self.right_pressed:
             self.player.change_x = -game_constants.MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
@@ -74,6 +91,7 @@ class MyGame(arcade.Window):
 
         self.entity_list.update()
         self.entity_list.update_animation()
+        self.obstacle_list.update()
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -90,6 +108,10 @@ class MyGame(arcade.Window):
             self.up_pressed = True
         elif key == arcade.key.DOWN:
             self.down_pressed = True
+
+        # Hard quit the game (for the moment).
+        if key == arcade.key.ESCAPE:
+            exit()
 
     def on_key_release(self, key, key_modifiers):
         """
@@ -121,6 +143,22 @@ class MyGame(arcade.Window):
         Called when a user releases a mouse button.
         """
         pass
+
+    def spawn_obstacle(self, delta_time):
+        """
+        Will be called once every to spawn obstacle in the game. Will consist of a stalagmite and a stalagtite.
+        :param delta_time:
+        :return:
+        """
+        obstacle_type = randint(1, 3)
+        print(f"Obstacle type is {obstacle_type}")
+        if obstacle_type == game_constants.OBSTACLE_DOWNWARD:
+            self.obstacle_list.append(Obstacle(True))
+        elif obstacle_type == game_constants.OBSTACLE_UPWARD:
+            self.obstacle_list.append(Obstacle(False))
+        else:  # obstacle_type == game_constants.ObstacleType.BOTH:
+            self.obstacle_list.append(Obstacle(True))
+            self.obstacle_list.append(Obstacle(False))
 
 
 def main():
