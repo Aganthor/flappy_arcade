@@ -3,7 +3,7 @@ import os
 import game_constants
 
 
-class Player(arcade.AnimatedTimeBasedSprite):
+class Player(arcade.Sprite):
     """
     Simple class to represent our little user controlled plane in the
     game.
@@ -18,17 +18,25 @@ class Player(arcade.AnimatedTimeBasedSprite):
         self.number_of_lives = Player.MAX_LIVES
         self.center_y = 100
         self.center_x = 100
-        self.current_index = 0
         self.score = 0
-        self.textures = []
 
-        for i in range(3):
-            self.textures.append(arcade.load_texture(os.path.join('assets/images/', 'planeRed' + str(i + 1) + '.png')))
-
-        self.cur_texture_index = 0
-
+        self.textures = [
+            arcade.load_texture("assets/images/planeRed1.png"),
+            arcade.load_texture("assets/images/planeRed2.png"),
+            arcade.load_texture("assets/images/planeRed3.png")
+        ]
+        self.current_texture = 0
+        self.set_texture(self.current_texture)
 
     def update(self):
+        # Update the animation.
+        self.current_texture += 1
+        if self.current_texture < len(self.textures):
+            self.set_texture(self.current_texture)
+        else:
+            self.current_texture = 0
+            self.set_texture(self.current_texture)
+
         # Apply mouvement...
         self.center_x += self.change_x
         self.center_y += self.change_y
@@ -37,8 +45,8 @@ class Player(arcade.AnimatedTimeBasedSprite):
             self.left = 0
         elif self.right > game_constants.SCREEN_WIDTH - 1:
             self.right = game_constants.SCREEN_WIDTH - 1
-        if self.top < 0:
-            self.top = 0
-        elif self.bottom > game_constants.SCREEN_HEIGHT - 1:
-            self.bottom = game_constants.SCREEN_HEIGHT - 1
+        if self.top > game_constants.SCREEN_HEIGHT:
+            self.top = game_constants.SCREEN_HEIGHT
+        elif self.bottom < 0:
+            self.bottom = 0
 
