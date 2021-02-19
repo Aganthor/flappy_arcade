@@ -3,7 +3,7 @@ import game_constants
 
 
 class Obstacle(arcade.Sprite):
-    MOVE_SPEED = 2
+    MOVE_SPEED = 3
 
     def __init__(self, flipped):
         """
@@ -12,7 +12,7 @@ class Obstacle(arcade.Sprite):
         """
         super().__init__()
         if flipped:
-            self.textures = [arcade.load_texture("assets/images/rockGrass.png", flipped_vertically=True)]
+            self.textures = [arcade.load_texture("assets/images/rockGrassDown.png")]
         else:
             self.textures = [arcade.load_texture("assets/images/rockGrass.png")]
 
