@@ -11,7 +11,8 @@ import arcade
 import player
 from obstacle import Obstacle
 from random import randint
-
+from game_states import GameState
+from explosion import PlaneExplosion
 import game_constants
 
 
@@ -33,6 +34,17 @@ class MyGame(arcade.Window):
         self.entity_list = None
         self.background = None
         self.obstacle_list = None
+        self.game_state = None
+        self.coin_list = None
+        self.explosion_list = None
+
+        # Pre-load the explosion textures
+        self.explosion_texture_list = []
+        self.explosion_texture_list = arcade.load_spritesheet("assets/images/spritesheet_explosion.png",
+                                                              256,
+                                                              256,
+                                                              14,
+                                                              182)
 
         # To track player key pressed
         self.left_pressed = False
@@ -49,13 +61,21 @@ class MyGame(arcade.Window):
         self.background.center_y = game_constants.SCREEN_HEIGHT / 2
 
         # Setup an arcade timer
-        arcade.schedule(self.spawn_obstacle, 1.5)
+        arcade.schedule(self.spawn_single_obstacle, 1.0)
+        arcade.schedule(self.spawn_double_obstacle, 3.0)
+
+        # Setup the explosion sprite
+        self.explosion_list = arcade.SpriteList()
 
         self.player = player.Player()
 
+        self.coin_list = arcade.SpriteList()
         self.entity_list = arcade.SpriteList()
         self.obstacle_list = arcade.SpriteList()
+
         self.entity_list.append(self.player)
+
+        self.game_state = GameState.RUNNING
 
     def on_draw(self):
         """
@@ -69,8 +89,8 @@ class MyGame(arcade.Window):
         self.background.draw()
         self.entity_list.draw()
         self.obstacle_list.draw()
-
-        # Call draw() on all your sprite lists below
+        self.coin_list.draw()
+        self.explosion_list.draw()
 
     def on_update(self, delta_time):
         """
@@ -78,6 +98,13 @@ class MyGame(arcade.Window):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        if self.game_state == GameState.PAUSE:
+            return
+
+        if self.game_state == GameState.PLAYER_EXPLOSION:
+            self.explosion_list.update()
+            return
+
         self.player.change_x, self.player.change_y = 0, 0
 
         if self.up_pressed and not self.down_pressed:
@@ -88,6 +115,19 @@ class MyGame(arcade.Window):
             self.player.change_x = -game_constants.MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
             self.player.change_x = game_constants.MOVEMENT_SPEED
+
+        # Check for collision between the player and the obstacles.
+        obstacle_hit_list = arcade.check_for_collision_with_list(self.player, self.obstacle_list)
+        if len(obstacle_hit_list) > 0:
+            explosion = PlaneExplosion(self.explosion_texture_list)
+            # Move it to the location of the player
+            explosion.center_x = self.player.center_x
+            explosion.center_y = self.player.center_y
+            # Call update() because it sets which image we start on
+            explosion.update()
+            self.explosion_list.append(explosion)
+            self.game_state = GameState.PLAYER_EXPLOSION
+            self.player.remove_from_sprite_lists()
 
         self.entity_list.update()
         self.entity_list.update_animation()
@@ -113,6 +153,13 @@ class MyGame(arcade.Window):
         if key == arcade.key.ESCAPE:
             exit()
 
+        # User pause?
+        if key == arcade.key.SPACE:
+            if self.game_state == GameState.PAUSE:
+                self.game_state = GameState.RUNNING
+            elif self.game_state == GameState.RUNNING:
+                self.game_state = GameState.PAUSE
+
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
@@ -126,39 +173,27 @@ class MyGame(arcade.Window):
         elif key == arcade.key.DOWN:
             self.down_pressed = False
 
-    def on_mouse_motion(self, x, y, delta_x, delta_y):
+    def spawn_single_obstacle(self, delta_time):
         """
-        Called whenever the mouse moves.
-        """
-        pass
-
-    def on_mouse_press(self, x, y, button, key_modifiers):
-        """
-        Called when the user presses a mouse button.
-        """
-        pass
-
-    def on_mouse_release(self, x, y, button, key_modifiers):
-        """
-        Called when a user releases a mouse button.
-        """
-        pass
-
-    def spawn_obstacle(self, delta_time):
-        """
-        Will be called once every to spawn obstacle in the game. Will consist of a stalagmite and a stalagtite.
+        Will be called once every to spawn obstacle in the game. Will consist of a stalagmite or a stalagtite.
         :param delta_time:
         :return:
         """
-        obstacle_type = randint(1, 3)
-        print(f"Obstacle type is {obstacle_type}")
+        if self.game_state == GameState.PAUSE or self.game_state == GameState.PLAYER_EXPLOSION:
+            return
+
+        obstacle_type = randint(1, 2)
         if obstacle_type == game_constants.OBSTACLE_DOWNWARD:
             self.obstacle_list.append(Obstacle(True))
         elif obstacle_type == game_constants.OBSTACLE_UPWARD:
             self.obstacle_list.append(Obstacle(False))
-        else:  # obstacle_type == game_constants.ObstacleType.BOTH:
-            self.obstacle_list.append(Obstacle(True))
-            self.obstacle_list.append(Obstacle(False))
+
+    def spawn_double_obstacle(self, delta_time):
+        if self.game_state == GameState.PAUSE or self.game_state == GameState.PLAYER_EXPLOSION:
+            return
+
+        self.obstacle_list.append(Obstacle(True))
+        self.obstacle_list.append(Obstacle(False))
 
 
 def main():
