@@ -17,7 +17,7 @@ class PlaneExplosion(arcade.Sprite):
             arcade.load_texture("assets/images/smokeparticles/PNG/Explosion/explosion08.png"),
         ]
         self.current_texture = 0
-        self.scale = 0.50
+        self.scale = 0.35
         self.set_texture(self.current_texture)
 
     def update(self):
