@@ -14,6 +14,7 @@ from random import randint
 from game_states import GameState
 from explosion import PlaneExplosion
 import game_constants
+import gameover_view
 
 
 class MyGame(arcade.Window):
@@ -38,9 +39,6 @@ class MyGame(arcade.Window):
         self.explosion_list = None
 
         self.game_state = None
-
-        # Pre-load the explosion textures
-
 
         # To track player key pressed
         self.left_pressed = False
@@ -115,7 +113,6 @@ class MyGame(arcade.Window):
         # Check for collision between the player and the obstacles.
         obstacle_hit_list = arcade.check_for_collision_with_list(self.player, self.obstacle_list)
         if len(obstacle_hit_list) > 0:
-            #explosion = PlaneExplosion(self.explosion_texture_list)
             explosion = PlaneExplosion()
             # Move it to the location of the player
             explosion.center_x = self.player.center_x
@@ -173,7 +170,7 @@ class MyGame(arcade.Window):
 
     def spawn_single_obstacle(self, delta_time):
         """
-        Will be called once every to spawn obstacle in the game. Will consist of a stalagmite or a stalagtite.
+        Will be called once every second to spawn obstacle in the game. Will consist of a stalagmite or a stalagtite.
         :param delta_time:
         :return:
         """
